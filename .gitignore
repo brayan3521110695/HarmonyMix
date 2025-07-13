@@ -1,0 +1,33 @@
+# Entornos virtuales de Python
+venv/
+.env
+.env.*
+
+# Archivos compilados de Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Tailwind y build temporales
+*.css.map
+*.tmp
+dist/
+build/
+
+# Archivos de audio o subidas locales
+*.mp3
+static/uploads/
+
+# VSCode settings (opcional)
+.vscode/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
