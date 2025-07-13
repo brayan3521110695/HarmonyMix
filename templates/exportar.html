@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Exportar Mezcla - HarmonyMix</title>
+
+  <!-- Carga del CSS desde static -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <!-- Script para cargar datos desde localStorage -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const nombre = localStorage.getItem("nombre") || "mezcla_harmony_01.mp3";
+      const duracion = localStorage.getItem("duracion") || "2:38";
+      const tamano = localStorage.getItem("tamano") || "4.6 MB";
+      const fecha = localStorage.getItem("fecha") || "29/06/2025";
+
+      document.getElementById("dato-nombre").textContent = nombre;
+      document.getElementById("dato-duracion").textContent = duracion;
+      document.getElementById("dato-tamano").textContent = tamano;
+      document.getElementById("dato-fecha").textContent = fecha;
+    });
+
+    function compartirMezcla() {
+      const url = window.location.origin + '/static/uploads/mix_ia_final.mp3';
+
+      if (navigator.share) {
+        navigator.share({
+          title: 'HarmonyMix 🎶',
+          text: '¡Escucha mi mezcla con IA!',
+          url: url
+        }).then(() => console.log('Compartido exitosamente'))
+          .catch(err => console.error('Error al compartir', err));
+      } else {
+        navigator.clipboard.writeText(url)
+          .then(() => alert('🔗 Enlace copiado al portapapeles'))
+          .catch(() => alert('No se pudo copiar el enlace'));
+      }
+    }
+  </script>
+</head>
+
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center px-6 py-12">
+
+  <main class="bg-gray-800 p-10 rounded-xl shadow-xl w-full max-w-2xl text-center space-y-6">
+
+    <!-- Título -->
+    <h1 class="text-4xl font-bold text-green-400">✅ Mezcla finalizada</h1>
+    <p class="text-gray-300 text-lg">¡Tu pista ha sido mezclada exitosamente con la inteligencia de HarmonyMind!</p>
+
+    <!-- Detalles de la mezcla -->
+    <div class="bg-gray-700 p-4 rounded-lg text-left text-sm space-y-1">
+      <p><span class="font-semibold text-white">Nombre:</span> <span id="dato-nombre"></span></p>
+      <p><span class="font-semibold text-white">Duración:</span> <span id="dato-duracion"></span></p>
+      <p><span class="font-semibold text-white">Tamaño:</span> <span id="dato-tamano"></span></p>
+      <p><span class="font-semibold text-white">Fecha:</span> <span id="dato-fecha"></span></p>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="flex flex-wrap justify-center gap-4 mt-6">
+      <a href="{{ url_for('static', filename='uploads/mix_ia_final.mp3') }}" download class="bg-green-600 hover:bg-green-500 px-5 py-2 rounded-full font-semibold">⬇️ Descargar MP3</a>
+      <button onclick="compartirMezcla()" class="bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded-full font-semibold">📤 Compartir</button>
+      <a href="{{ url_for('index') }}" class="bg-pink-600 hover:bg-pink-500 px-5 py-2 rounded-full font-semibold">🎚️ Volver a mezclar</a>
+    </div>
+
+    <!-- Volver -->
+    <div class="mt-6">
+      <a href="dashboard.html" class="text-pink-400 hover:underline">← Volver al panel</a>
+    </div>
+
+  </main>
+</body>
+</html>
