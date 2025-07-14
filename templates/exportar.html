@@ -61,12 +61,12 @@
     <div class="flex flex-wrap justify-center gap-4 mt-6">
       <a href="{{ url_for('static', filename='uploads/mix_ia_final.mp3') }}" download class="bg-green-600 hover:bg-green-500 px-5 py-2 rounded-full font-semibold">⬇️ Descargar MP3</a>
       <button onclick="compartirMezcla()" class="bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded-full font-semibold">📤 Compartir</button>
-      <a href="{{ url_for('index') }}" class="bg-pink-600 hover:bg-pink-500 px-5 py-2 rounded-full font-semibold">🎚️ Volver a mezclar</a>
+      <a href="{{ url_for('mostrar_mezclador') }}" class="bg-pink-600 hover:bg-pink-500 px-5 py-2 rounded-full font-semibold">🎚️ Volver a mezclar</a>
     </div>
 
     <!-- Volver -->
     <div class="mt-6">
-      <a href="dashboard.html" class="text-pink-400 hover:underline">← Volver al panel</a>
+      <a href="{{ url_for('dashboard') }}" class="text-pink-400 hover:underline">← Volver al panel</a>
     </div>
 
   </main>
