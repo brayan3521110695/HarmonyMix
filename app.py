@@ -5,9 +5,18 @@ import os
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
-# Página principal (mezclador)
-@app.route('/', endpoint='index')
-def mostrar_index():
+# Página principal: Dashboard
+@app.route('/', endpoint='dashboard')
+def mostrar_dashboard():
+    mezclas = [
+        {'nombre': 'Mix 01', 'fecha': '28/06/2025'},
+        {'nombre': 'Mix 02', 'fecha': '26/06/2025'}
+    ]
+    return render_template('dashboard.html', mezclas=mezclas)
+
+# Mezclador (antes era la página principal)
+@app.route('/mezclador')
+def mostrar_mezclador():
     return index(app.config['UPLOAD_FOLDER'])
 
 # Generar mezcla por IA
@@ -23,16 +32,7 @@ def mostrar_exportar():
 # Simular logout
 @app.route('/logout')
 def logout():
-    return redirect(url_for('index'))
-
-# Dashboard principal (solo si decides usarlo más adelante)
-@app.route('/dashboard')
-def dashboard():
-    mezclas = [
-        {'nombre': 'Mix 01', 'fecha': '28/06/2025'},
-        {'nombre': 'Mix 02', 'fecha': '26/06/2025'}
-    ]
-    return render_template('dashboard.html', mezclas=mezclas)
+    return redirect(url_for('dashboard'))
 
 # Página en construcción para "Mis pistas"
 @app.route('/pistas')
