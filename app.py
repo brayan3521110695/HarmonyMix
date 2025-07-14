@@ -17,13 +17,27 @@ def obtener_ultima_pista():
     mp3s.sort(key=lambda f: os.path.getmtime(os.path.join(app.config['UPLOAD_FOLDER'], f)), reverse=True)
     return mp3s[0]
 
-# Página principal del mezclador
+# Dashboard principal
 @app.route('/')
-def index():
+def dashboard():
+    mezclas = [
+        {'nombre': 'Mix 01', 'fecha': '28/06/2025'},
+        {'nombre': 'Mix 02', 'fecha': '26/06/2025'}
+    ]
+    return render_template('dashboard.html', mezclas=mezclas)
+
+# Página de Mis pistas
+@app.route('/pistas')
+def pistas():
+    return "<h1 style='color:white;background:#111;padding:20px;'>🎵 Página de pistas en construcción</h1>"
+
+# Mezclador
+@app.route('/mezclador')
+def mezclador():
     pista = obtener_ultima_pista()
     return render_template('mezcla.html', audio_file=pista)
 
-# Ruta que simula la aplicación de IA (copia el archivo actual)
+# Simular mezcla por IA
 @app.route('/mezclar', methods=['POST'])
 def mezclar():
     pista_actual = obtener_ultima_pista()
@@ -40,10 +54,15 @@ def mezclar():
         'nombre': 'mix_ia_final.mp3'
     })
 
-# Ruta para exportar
+# Exportar mezcla
 @app.route('/exportar')
 def exportar():
     return render_template('exportar.html')
+
+# Simular logout
+@app.route('/logout')
+def logout():
+    return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
     app.run(debug=True)
