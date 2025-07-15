@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -33,10 +34,22 @@
     <div class="flex flex-wrap justify-center gap-4">
       <button onclick="reproducir()" class="bg-pink-600 hover:bg-pink-500 px-5 py-2 rounded-full">▶️ Reproducir</button>
       <button onclick="pausar()" class="bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded-full">⏸️ Pausar</button>
-      <button onclick="aplicarIA()" class="bg-purple-600 hover:bg-purple-500 px-5 py-2 rounded-full">🤖 Aplicar IA</button>
-      <button onclick="guardarMezcla()" class="bg-green-600 hover:bg-green-500 px-5 py-2 rounded-full">💾 Guardar mezcla</button>
+      <button onclick="aplicarIA()" class="bg-purple-600 hover:bg-purple-500 px-5 py-2 rounded-full">🤖 Aplicar
+        IA</button>
+      <button onclick="guardarMezcla()" class="bg-green-600 hover:bg-green-500 px-5 py-2 rounded-full">💾 Guardar
+        mezcla</button>
     </div>
   </div>
+  {% if audio_file == 'mix_ia_final.mp3' %}
+  <div class="bg-gray-800 mt-10 p-6 rounded-xl shadow-md w-full max-w-4xl">
+    <h3 class="text-xl font-semibold text-pink-400 mb-3">🎧 Escuchar mezcla generada por IA</h3>
+    <audio controls class="w-full">
+      <source src="{{ url_for('static', filename='uploads/mix_ia_final.mp3') }}" type="audio/mpeg">
+      Tu navegador no soporta audio HTML5.
+    </audio>
+  </div>
+  {% endif %}
+
   <div class="mt-8">
     <a href="{{ url_for('dashboard') }}" class="text-pink-400 hover:underline">← Volver al panel</a>
   </div>
@@ -47,43 +60,53 @@
     Tu navegador no soporta audio.
   </audio>
 
-  <script>
-    function reproducir() {
-      const player = document.getElementById("player");
-      player.play();
-    }
+<script>
+  function reproducir() {
+    const player = document.getElementById("player");
+    player.play();
+  }
 
-    function pausar() {
-      const player = document.getElementById("player");
-      player.pause();
-    }
+  function pausar() {
+    const player = document.getElementById("player");
+    player.pause();
+  }
 
-    function aplicarIA() {
-      const mensaje = document.getElementById("mensajeIA");
-      mensaje.classList.remove("hidden");
+  function aplicarIA() {
+    const mensaje = document.getElementById("mensajeIA");
+    if (mensaje) mensaje.classList.remove("hidden");
 
-      setTimeout(() => {
-        fetch('/mezclar', { method: 'POST' })
-          .then(res => res.json())
-          .then(data => {
-            mensaje.classList.add("hidden");
-            alert(data.mensaje);
-            localStorage.setItem("nombre", data.nombre);
-            localStorage.setItem("duracion", "2:38");
-            localStorage.setItem("tamano", "4.6 MB");
-            localStorage.setItem("fecha", "29/06/2025");
-          })
-          .catch(() => {
-            mensaje.classList.add("hidden");
-            alert("Error al aplicar IA. Asegúrate de que Flask esté corriendo.");
-          });
-      }, 2000);
-    }
+    setTimeout(() => {
+      fetch('/mezclar', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+          if (mensaje) mensaje.classList.add("hidden");
+          alert(data.mensaje);
+          // Redireccionar a "/" con la mezcla generada
+          window.location.href = "/";
+        })
+        .catch(() => {
+          if (mensaje) mensaje.classList.add("hidden");
+          alert("Error al aplicar IA. Asegúrate de que Flask esté corriendo.");
+        });
+    }, 2000);
+  }
 
-    function guardarMezcla() {
-      window.location.href = "{{ url_for('exportar') }}";
-    }
-  </script>
+  function guardarMezcla() {
+    window.location.href = "{{ url_for('exportar') }}";
+  }
+</script>
+<div id="mensajeIA" class="hidden fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-purple-600 text-white px-5 py-3 rounded-lg shadow-lg z-50 font-semibold text-sm flex items-center gap-2">
+  <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+    <path class="opacity-75" fill="currentColor"
+      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
+    </path>
+  </svg>
+  Procesando mezcla con IA...
+</div>
+
+
 
 </body>
+
 </html>
