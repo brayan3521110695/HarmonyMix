@@ -1,7 +1,7 @@
 import sqlite3
 from flask import session
 from flask import Flask, request, render_template, redirect, url_for, jsonify, flash
-from controllers.mezcla_controller import index, mezclar, exportar
+from controllers.mezcla_controller import index as mezclador_index, mezclar, exportar
 import os
 
 app = Flask(__name__)
@@ -12,8 +12,6 @@ app.config['UPLOAD_FOLDER'] = 'static/uploads'
 @app.route('/')
 def index():
     return render_template('index.html')
-
-
 
 #login y registro
 @app.route('/register', methods=['GET', 'POST'])
@@ -72,7 +70,7 @@ def dashboard():
 # Mezclador (antes era la página principal)
 @app.route('/mezclador')
 def mostrar_mezclador():
-    return index(app.config['UPLOAD_FOLDER'])
+    return mezclador_index(app.config['UPLOAD_FOLDER'])
 
 # Generar mezcla por IA
 @app.route('/mezclar', methods=['POST'], endpoint='mezclar')
