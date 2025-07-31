@@ -4,8 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Panel DJ - Harmony IA</title>
-
-    <!-- Cargar los estilos desde static -->
     <link
         rel="stylesheet"
         href="{{ url_for('static', filename='style.css') }}"
@@ -13,7 +11,6 @@
 </head>
 
 <body class="bg-gray-900 text-white min-h-screen flex">
-    <!-- Sidebar -->
     <aside class="w-64 bg-gray-800 flex flex-col p-6 space-y-6">
         <h2 class="text-2xl font-bold text-pink-500">🎧 HarmonyMind</h2>
         <nav class="flex flex-col gap-4 mt-6">
@@ -40,9 +37,8 @@
     </nav>
     </aside>
 
-    <!-- Contenido principal -->
+
     <main class="flex-1 p-8">
-    <!-- Encabezado -->
     <header class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold">Bienvenido DJ 🎛️</h1>
         <button class="bg-pink-600 hover:bg-pink-500 px-4 py-2 rounded-full">
@@ -50,7 +46,6 @@
         </button>
     </header>
 
-    <!-- Área de carga -->
     <section class="bg-gray-800 p-6 rounded-lg shadow-lg">
         <h2 class="text-xl font-semibold mb-4">🎵 Subir pista</h2>
         <p class="text-gray-400 mb-4">
@@ -62,8 +57,6 @@
             class="text-sm text-white file:bg-pink-600 file:text-white file:px-4 file:py-2 file:rounded-md file:border-0 file:font-semibold hover:file:bg-pink-500"
         />
     </section>
-
-    <!-- Lista de mezclas dinámicas -->
     <section class="mt-10">
         <h3 class="text-2xl font-bold mb-4">Tus mezclas recientes</h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">

@@ -5,7 +5,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mezclador - HarmonyMix</title>
-  <!-- Carga del CSS desde /static/style.css -->
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
@@ -25,12 +24,10 @@
       <span class="bg-green-600 text-white px-3 py-1 rounded-full text-sm">Cargado</span>
     </div>
 
-    <!-- Visualizador (simulado) -->
     <div class="bg-gray-700 h-32 rounded flex items-center justify-center text-gray-400 italic">
       [ Visualizador de ondas aquí ]
     </div>
 
-    <!-- Controles -->
     <div class="flex flex-wrap justify-center gap-4">
       <button onclick="reproducir()" class="bg-pink-600 hover:bg-pink-500 px-5 py-2 rounded-full">▶️ Reproducir</button>
       <button onclick="pausar()" class="bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded-full">⏸️ Pausar</button>
@@ -54,7 +51,6 @@
     <a href="{{ url_for('dashboard') }}" class="text-pink-400 hover:underline">← Volver al panel</a>
   </div>
 
-  <!-- Audio oculto -->
   <audio id="player" class="hidden">
     <source src="{{ url_for('static', filename='uploads/' + audio_file) }}" type="audio/mpeg">
     Tu navegador no soporta audio.

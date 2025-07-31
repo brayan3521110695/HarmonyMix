@@ -15,14 +15,13 @@ def enviar_a_audiostack(ruta_mp3):
     with open(ruta_mp3, 'rb') as f:
         files = {"file": f}
         data = {
-            "mode": "mixing",  # o "enhance", según la doc
+            "mode": "mixing",
             "output_format": "mp3"
         }
 
         response = requests.post(url, headers=headers, files=files, data=data)
 
     if response.status_code == 200:
-        # Guardar mezcla generada
         salida = os.path.join(os.path.dirname(ruta_mp3), "mix_ia_final.mp3")
         with open(salida, "wb") as out_file:
             out_file.write(response.content)

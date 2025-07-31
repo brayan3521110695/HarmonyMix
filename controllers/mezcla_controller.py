@@ -2,12 +2,10 @@ from flask import render_template, jsonify
 import os
 from services.audio_service import obtener_ultima_pista, enviar_a_audiostack
 
-# Página principal del mezclador
 def index(upload_folder):
     pista = obtener_ultima_pista(upload_folder)
     return render_template('mezcla.html', audio_file=pista)
 
-# Procesamiento IA usando Audiostack
 def mezclar(upload_folder):
     pista_actual = obtener_ultima_pista(upload_folder)
     original_path = os.path.join(upload_folder, pista_actual)
@@ -22,6 +20,5 @@ def mezclar(upload_folder):
         'nombre': mezcla_generada
     })
 
-# Página de exportación
 def exportar():
     return render_template('exportar.html')

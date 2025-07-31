@@ -8,12 +8,10 @@ app = Flask(__name__)
 app.secret_key = 'me_lapeasCalabaza'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
-# Simular index route
 @app.route('/')
 def index():
     return render_template('index.html')
 
-#login y registro
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -47,14 +45,12 @@ def login():
 
         if user:
             session['usuario'] = usuario
-            return redirect(url_for('dashboard'))  # <- usa tu función ya existente
+            return redirect(url_for('dashboard'))
         else:
             flash('Credenciales incorrectas')
     return render_template('login.html')
 
 
-
-# Página principal: Dashboard
 @app.route('/dashboard')
 def dashboard():
     if 'usuario' not in session:
@@ -67,29 +63,23 @@ def dashboard():
     return render_template('dashboard.html', mezclas=mezclas)
 
 
-# Mezclador (antes era la página principal)
 @app.route('/mezclador')
 def mostrar_mezclador():
     return mezclador_index(app.config['UPLOAD_FOLDER'])
 
-# Generar mezcla por IA
 @app.route('/mezclar', methods=['POST'], endpoint='mezclar')
 def generar_mezcla():
     return mezclar(app.config['UPLOAD_FOLDER'])
 
-# Página de exportación
 @app.route('/exportar', endpoint='exportar')
 def mostrar_exportar():
     return exportar()
 
-# Simular logout
 @app.route('/logout')
 def logout():
     session.pop('usuario', None)
     return redirect(url_for('login'))
 
-
-# Página en construcción para "Mis pistas"
 @app.route('/pistas')
 def pistas():
     return "<h1 style='color:white;background:#111;padding:20px;'>🎵 Página de pistas en construcción</h1>"
