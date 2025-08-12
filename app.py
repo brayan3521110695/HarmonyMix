@@ -1,12 +1,19 @@
-import sqlite3
-from flask import session
-from flask import Flask, request, render_template, redirect, url_for, jsonify, flash
-from controllers.mezcla_controller import index as mezclador_index, mezclar, exportar
 import os
+import sqlite3
+from flask import Flask, request, render_template, redirect, url_for, jsonify, flash, session
+from controllers.mezcla_controller import mezcla_bp  # ✅ usamos solo el blueprint
 
 app = Flask(__name__)
 app.secret_key = 'me_lapeasCalabaza'
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
+
+# Carpeta de uploads dentro de /static
+app.config['UPLOAD_FOLDER'] = os.path.join(app.static_folder, 'uploads')
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Registrar blueprint del mezclador (expone /mezcla y /mezclar)
+app.register_blueprint(mezcla_bp)
+
+# ---------------- Rutas base ----------------
 
 @app.route('/')
 def index():
@@ -21,7 +28,10 @@ def register():
         conn = sqlite3.connect('harmony.db')
         cursor = conn.cursor()
         try:
-            cursor.execute("INSERT INTO usuarios (usuario, password) VALUES (?, ?)", (usuario, password))
+            cursor.execute(
+                "INSERT INTO usuarios (usuario, password) VALUES (?, ?)",
+                (usuario, password)
+            )
             conn.commit()
             flash('Usuario registrado con éxito')
             return redirect(url_for('login'))
@@ -39,7 +49,10 @@ def login():
 
         conn = sqlite3.connect('harmony.db')
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM usuarios WHERE usuario=? AND password=?", (usuario, password))
+        cursor.execute(
+            "SELECT * FROM usuarios WHERE usuario=? AND password=?",
+            (usuario, password)
+        )
         user = cursor.fetchone()
         conn.close()
 
@@ -49,7 +62,6 @@ def login():
         else:
             flash('Credenciales incorrectas')
     return render_template('login.html')
-
 
 @app.route('/dashboard')
 def dashboard():
@@ -61,19 +73,6 @@ def dashboard():
         {'nombre': 'Mix 02', 'fecha': '26/06/2025'}
     ]
     return render_template('dashboard.html', mezclas=mezclas)
-
-
-@app.route('/mezclador')
-def mostrar_mezclador():
-    return mezclador_index(app.config['UPLOAD_FOLDER'])
-
-@app.route('/mezclar', methods=['POST'], endpoint='mezclar')
-def generar_mezcla():
-    return mezclar(app.config['UPLOAD_FOLDER'])
-
-@app.route('/exportar', endpoint='exportar')
-def mostrar_exportar():
-    return exportar()
 
 @app.route('/logout')
 def logout():

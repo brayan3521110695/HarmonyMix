@@ -18,7 +18,7 @@
   <div class="bg-gray-800 w-full max-w-4xl p-6 rounded-xl shadow-xl space-y-6">
     <div class="flex items-center justify-between border-b border-gray-600 pb-4">
       <div>
-        <h2 class="text-2xl font-semibold">🎵 {{ audio_file }}</h2>
+        <h2 class="text-2xl font-semibold">🎵 {{ audio_file or '—' }}</h2>
         <p class="text-gray-400 text-sm">Duración: 2:35 | Tamaño: 4.7MB</p>
       </div>
       <span class="bg-green-600 text-white px-3 py-1 rounded-full text-sm">Cargado</span>
@@ -26,6 +26,40 @@
 
     <div class="bg-gray-700 h-32 rounded flex items-center justify-center text-gray-400 italic">
       [ Visualizador de ondas aquí ]
+    </div>
+
+    <!-- Subida de nuevas pistas (múltiples) -->
+    <div class="space-y-3">
+      <h3 class="text-lg font-semibold">Subir nuevas pistas</h3>
+      <form id="uploadForm" class="flex flex-wrap items-center gap-3" enctype="multipart/form-data">
+        <input id="fileInput" type="file" name="files" multiple accept="audio/*"
+          class="text-sm text-white file:bg-pink-600 file:text-white file:px-4 file:py-2 file:rounded-md file:border-0 file:font-semibold hover:file:bg-pink-500" />
+        <button type="button" onclick="subirPistas()" class="bg-pink-600 hover:bg-pink-500 px-4 py-2 rounded-full">
+          ⬆️ Subir
+        </button>
+        <span id="uploadMsg" class="text-gray-400 text-sm"></span>
+      </form>
+    </div>
+
+    <!-- Lista de pistas disponibles (excluye mix_ia_final.mp3) -->
+    <div class="space-y-4">
+      <h3 class="text-lg font-semibold">Selecciona 2 o más pistas a mezclar</h3>
+      <form id="formPistas" class="bg-gray-800 p-4 rounded-lg max-h-64 overflow-auto">
+        {% if files and files|length > 0 %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {% for f in files %}
+          {% if f != 'mix_ia_final.mp3' %}
+          <label class="flex items-center gap-3 bg-gray-700 px-3 py-2 rounded">
+            <input type="checkbox" name="files" value="{{ f }}" class="w-4 h-4">
+            <span class="truncate">{{ f }}</span>
+          </label>
+          {% endif %}
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-400">No hay archivos en <code>static/uploads</code>. Sube algunos MP3.</p>
+        {% endif %}
+      </form>
     </div>
 
     <div class="flex flex-wrap justify-center gap-4">
@@ -37,11 +71,13 @@
         mezcla</button>
     </div>
   </div>
+
   {% if audio_file == 'mix_ia_final.mp3' %}
   <div class="bg-gray-800 mt-10 p-6 rounded-xl shadow-md w-full max-w-4xl">
     <h3 class="text-xl font-semibold text-pink-400 mb-3">🎧 Escuchar mezcla generada por IA</h3>
     <audio controls class="w-full">
-      <source src="{{ url_for('static', filename='uploads/mix_ia_final.mp3') }}" type="audio/mpeg">
+      <source src="{{ url_for('static', filename='uploads/mix_ia_final.mp3') }}?_={{ range(1, 1000000)|random }}"
+        type="audio/mpeg">
       Tu navegador no soporta audio HTML5.
     </audio>
   </div>
@@ -52,56 +88,95 @@
   </div>
 
   <audio id="player" class="hidden">
-    <source src="{{ url_for('static', filename='uploads/' + audio_file) }}" type="audio/mpeg">
+    {% if audio_file %}
+    <source src="{{ url_for('static', filename='uploads/' ~ audio_file) }}" type="audio/mpeg">
+    {% endif %}
     Tu navegador no soporta audio.
   </audio>
 
-<script>
-  function reproducir() {
-    const player = document.getElementById("player");
-    player.play();
-  }
+  <script>
+    function reproducir() {
+      const player = document.getElementById("player");
+      player.play();
+    }
+    function pausar() {
+      const player = document.getElementById("player");
+      player.pause();
+    }
 
-  function pausar() {
-    const player = document.getElementById("player");
-    player.pause();
-  }
+    // Subida de múltiples pistas
+    function subirPistas() {
+      const inp = document.getElementById('fileInput');
+      const msg = document.getElementById('uploadMsg');
+      if (!inp.files || inp.files.length === 0) {
+        alert('Selecciona al menos un archivo.');
+        return;
+      }
+      const fd = new FormData();
+      for (const f of inp.files) fd.append('files', f);
+      msg.textContent = 'Subiendo...';
 
-  function aplicarIA() {
-    const mensaje = document.getElementById("mensajeIA");
-    if (mensaje) mensaje.classList.remove("hidden");
+      fetch('/mezcla/upload', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(data => {
+          if (data.ok) {
+            msg.textContent = `Listo: ${data.guardados.length} subidos` +
+              (data.rechazados.length ? `, rechazados: ${data.rechazados.join(', ')}` : '');
+            // recargar para verlos en la lista
+            setTimeout(() => window.location.reload(), 800);
+          } else {
+            msg.textContent = data.mensaje || 'Error al subir';
+          }
+        })
+        .catch(() => { msg.textContent = 'Error al subir. Revisa tu conexión.'; });
+    }
 
-    setTimeout(() => {
-      fetch('/mezclar', { method: 'POST' })
+    // Enviar selección a /mezclar
+    function aplicarIA() {
+      const seleccionados = [...document.querySelectorAll('input[name="files"]:checked')].map(i => i.value);
+      if (seleccionados.length < 2) {
+        alert('Selecciona al menos dos pistas.');
+        return;
+      }
+
+      const mensaje = document.getElementById("mensajeIA");
+      if (mensaje) mensaje.classList.remove("hidden");
+
+      fetch('/mezclar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files: seleccionados, mode: 'smart' })   // 👈
+      })
+
         .then(res => res.json())
         .then(data => {
           if (mensaje) mensaje.classList.add("hidden");
-          alert(data.mensaje);
-          // Redireccionar a "/" con la mezcla generada
-          window.location.href = "/";
+          if (data.ok) {
+            alert(data.mensaje);
+            window.location.href = "/mezcla";
+          } else {
+            alert(data.mensaje || "Error al mezclar");
+          }
         })
         .catch(() => {
           if (mensaje) mensaje.classList.add("hidden");
           alert("Error al aplicar IA. Asegúrate de que Flask esté corriendo.");
         });
-    }, 2000);
-  }
+    }
 
-  function guardarMezcla() {
-    window.location.href = "{{ url_for('exportar') }}";
-  }
-</script>
-<div id="mensajeIA" class="hidden fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-purple-600 text-white px-5 py-3 rounded-lg shadow-lg z-50 font-semibold text-sm flex items-center gap-2">
-  <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-    <path class="opacity-75" fill="currentColor"
-      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
-    </path>
-  </svg>
-  Procesando mezcla con IA...
-</div>
+    function guardarMezcla() {
+      window.location.href = "{{ url_for('static', filename='uploads/mix_ia_final.mp3') }}?_=" + Date.now();
+    }
+  </script>
 
-
+  <div id="mensajeIA"
+    class="hidden fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-purple-600 text-white px-5 py-3 rounded-lg shadow-lg z-50 font-semibold text-sm flex items-center gap-2">
+    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a 8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>
+    </svg>
+    Procesando mezcla con IA...
+  </div>
 
 </body>
 
