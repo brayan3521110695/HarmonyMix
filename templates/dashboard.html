@@ -2,17 +2,18 @@
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Panel DJ - Harmony IA</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel DJ - Harmony IA</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 </head>
 
 <body class="bg-gray-900 text-white min-h-screen flex">
+  <!-- Sidebar -->
   <aside class="w-64 bg-gray-800 flex flex-col p-6 space-y-6">
     <h2 class="text-2xl font-bold text-pink-500">🎧 HarmonyMind</h2>
 
-    <!-- 🟣 BLOQUE NUEVO: Créditos en el sidebar -->
+    <!-- Créditos -->
     <div class="bg-gray-900 border border-gray-700 rounded-xl p-4">
       <div class="text-sm text-gray-400">Créditos</div>
       <div class="text-3xl font-extrabold mt-1">
@@ -29,107 +30,80 @@
           </button>
         </form>
       </div>
-      <a href="{{ url_for('precios_historial') }}" class="block mt-2 text-xs text-gray-400 hover:text-gray-200">
+      <a href="{{ url_for('precios_historial') }}"
+         class="block mt-2 text-xs text-gray-400 hover:text-gray-200">
         Ver historial
       </a>
     </div>
-    <!-- 🟣 FIN BLOQUE NUEVO -->
 
+    <!-- Navegación -->
     <nav class="flex flex-col gap-4 mt-2">
       <a href="{{ url_for('dashboard') }}" class="hover:text-pink-400 transition">Inicio</a>
       <a href="{{ url_for('pistas') }}" class="hover:text-pink-400 transition">Mis pistas</a>
       <a href="{{ url_for('mostrar_mezclador') }}" class="hover:text-pink-400 transition">Mezclador</a>
       <a href="{{ url_for('exportar') }}" class="hover:text-pink-400 transition">Exportar</a>
-
-      <!-- 🟣 Enlace con badge (opcional, ya que arriba está el bloque de créditos) -->
       <a href="{{ url_for('precios') }}" class="hover:text-pink-400 transition flex items-center gap-2">
         Precios
         {% if credits_badge is not none %}
-          <span class="text-xs px-2 py-0.5 rounded-full bg-pink-600 text-white">{{ credits_badge }}</span>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-pink-600 text-white">
+            {{ credits_badge }}
+          </span>
         {% endif %}
       </a>
-
       <a href="{{ url_for('precios_historial') }}" class="hover:text-pink-400 transition">Historial</a>
       <a href="{{ url_for('logout') }}" class="hover:text-pink-400 transition">Cerrar sesión</a>
     </nav>
   </aside>
 
+  <!-- Contenido principal -->
   <main class="flex-1 p-8">
     <header class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold">Bienvenido DJ 🎛️</h1>
-      <button class="bg-pink-600 hover:bg-pink-500 px-4 py-2 rounded-full">
-        Nueva mezcla
-      </button>
+      <div class="flex items-center gap-3">
+        <a href="{{ url_for('mostrar_mezclador') }}" class="bg-pink-600 hover:bg-pink-500 px-4 py-2 rounded-full">
+          Nueva mezcla
+        </a>
+        <!-- Botón que guarda la mezcla generada por la IA (MIX_NAME) -->
+        <form action="{{ url_for('guardar_mezcla') }}" method="POST">
+          <button class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-full">
+            Guardar mezcla
+          </button>
+        </form>
+      </div>
     </header>
 
+    <!-- Subir pista (informativo) -->
     <section class="bg-gray-800 p-6 rounded-lg shadow-lg">
       <h2 class="text-xl font-semibold mb-4">🎵 Subir pista</h2>
       <p class="text-gray-400 mb-4">
-        Selecciona un archivo de audio para mezclar automáticamente con IA.
+        Genera tu mezcla con la IA y luego guárdala para verla aquí.
       </p>
-      <input
-        type="file"
-        accept="audio/*"
-        class="text-sm text-white file:bg-pink-600 file:text-white file:px-4 file:py-2 file:rounded-md file:border-0 file:font-semibold hover:file:bg-pink-500"
-      />
+      <input type="file" accept="audio/*"
+        class="text-sm text-white file:bg-pink-600 file:text-white file:px-4 file:py-2 file:rounded-md file:border-0 file:font-semibold hover:file:bg-pink-500" />
     </section>
 
+    <!-- Mezclas recientes -->
     <section class="mt-10">
       <h3 class="text-2xl font-bold mb-4">Tus mezclas recientes</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {% for mezcla in mezclas %}
-        <div class="bg-gray-800 p-4 rounded-lg">
-          <h4 class="text-lg font-semibold">{{ mezcla.nombre }}</h4>
-          <p class="text-gray-400 text-sm">Subido: {{ mezcla.fecha }}</p>
-          <button class="mt-3 bg-green-500 hover:bg-green-400 px-3 py-1 rounded">Reproducir</button>
-        </div>
+          <div class="bg-gray-800 p-4 rounded-lg">
+            <h4 class="text-lg font-semibold">{{ mezcla.nombre }}</h4>
+            <p class="text-gray-400 text-sm">Guardado: {{ mezcla.fecha }}</p>
+            <audio controls class="w-full mt-2">
+              <source src="/{{ mezcla.path }}" type="audio/mpeg">
+              Tu navegador no soporta audio HTML5.
+            </audio>
+            <a class="inline-block mt-3 bg-green-500 hover:bg-green-400 px-3 py-1 rounded"
+               href="/{{ mezcla.path }}" download>
+              Descargar
+            </a>
+          </div>
+        {% else %}
+          <p class="text-gray-400">Aún no has guardado mezclas. Genera una con la IA y pulsa <strong>Guardar mezcla</strong>.</p>
         {% endfor %}
       </div>
     </section>
   </main>
-    <aside class="w-64 bg-gray-800 flex flex-col p-6 space-y-6">
-        <h2 class="text-2xl font-bold text-pink-500">🎧 HarmonyMind</h2>
-        <nav class="flex flex-col gap-4 mt-6">
-            <a href="{{ url_for('dashboard') }}" class="hover:text-pink-400 transition">Inicio</a>
-            <a href="{{ url_for('pistas') }}" class="hover:text-pink-400 transition">Mis pistas</a>
-            <a href="{{ url_for('mezcla.vista_mezcla') }}" class="hover:text-pink-400 transition">Mezclador</a>
-            <a href="{{ url_for('static', filename='uploads/mix_ia_final.mp3') }}" download
-                class="hover:text-pink-400 transition">Exportar</a>
-            <a href="{{ url_for('logout') }}" class="hover:text-pink-400 transition">Cerrar sesión</a>
-        </nav>
-    </aside>
-
-    <main class="flex-1 p-8">
-        <header class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold">Bienvenido DJ 🎛️</h1>
-            <button class="bg-pink-600 hover:bg-pink-500 px-4 py-2 rounded-full">
-                Nueva mezcla
-            </button>
-        </header>
-
-        <section class="bg-gray-800 p-6 rounded-lg shadow-lg">
-            <h2 class="text-xl font-semibold mb-4">🎵 Subir pista</h2>
-            <p class="text-gray-400 mb-4">
-                Selecciona un archivo de audio para mezclar automáticamente con IA.
-            </p>
-            <input type="file" accept="audio/*"
-                class="text-sm text-white file:bg-pink-600 file:text-white file:px-4 file:py-2 file:rounded-md file:border-0 file:font-semibold hover:file:bg-pink-500" />
-        </section>
-
-        <section class="mt-10">
-            <h3 class="text-2xl font-bold mb-4">Tus mezclas recientes</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {% for mezcla in mezclas %}
-                <div class="bg-gray-800 p-4 rounded-lg">
-                    <h4 class="text-lg font-semibold">{{ mezcla.nombre }}</h4>
-                    <p class="text-gray-400 text-sm">Subido: {{ mezcla.fecha }}</p>
-                    <button class="mt-3 bg-green-500 hover:bg-green-400 px-3 py-1 rounded">
-                        Reproducir
-                    </button>
-                </div>
-                {% endfor %}
-            </div>
-        </section>
-    </main>
 </body>
 </html>

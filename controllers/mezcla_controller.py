@@ -88,3 +88,27 @@ def upload_tracks():
         guardados.append(name)
 
     return jsonify({"ok": True, "guardados": guardados, "rechazados": rechazados})
+# =========================
+# Capa de compat sin romper nada
+# (solo añade funciones que app.py espera)
+# =========================
+
+def index():
+    # Reutiliza tu vista principal existente
+    return vista_mezcla()
+
+# Si la ruta de export aún no existe, la creamos sin tocar lo demás
+if 'exportar_route' not in globals():
+    import os
+    from flask import current_app, jsonify, send_file
+
+    def exportar_route():
+        uploads_dir = os.path.join(current_app.static_folder, 'uploads')
+        mix_path = os.path.join(uploads_dir, MIX_NAME)
+        if not os.path.exists(mix_path):
+            return jsonify({"ok": False, "mensaje": "Aún no existe una mezcla para exportar."}), 404
+        return send_file(mix_path, as_attachment=True, download_name=MIX_NAME)
+
+def exportar():
+    # Reutiliza la lógica de exportar
+    return exportar_route()
