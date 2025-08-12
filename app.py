@@ -1,15 +1,22 @@
-import sqlite3
-from flask import session
-from flask import Flask, request, render_template, redirect, url_for, jsonify, flash
-from controllers.mezcla_controller import index as mezclador_index, mezclar, exportar
 import os
+import sqlite3
+from flask import Flask, request, render_template, redirect, url_for, jsonify, flash, session
+from controllers.mezcla_controller import mezcla_bp  # ✅ usamos solo el blueprint
 
 # === Costos (créditos) ===
 from db import init_cost_tables, wallet_get_credits, wallet_add_credits, wallet_consume_credit, wallet_get_history
 
 app = Flask(__name__)
 app.secret_key = 'me_lapeasCalabaza'
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
+
+# Carpeta de uploads dentro de /static
+app.config['UPLOAD_FOLDER'] = os.path.join(app.static_folder, 'uploads')
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Registrar blueprint del mezclador (expone /mezcla y /mezclar)
+app.register_blueprint(mezcla_bp)
+
+# ---------------- Rutas base ----------------
 
 # Inicializar tabla wallet al arrancar (Flask 3.x)
 try:
@@ -46,7 +53,10 @@ def register():
         conn = sqlite3.connect('harmony.db')
         cursor = conn.cursor()
         try:
-            cursor.execute("INSERT INTO usuarios (usuario, password) VALUES (?, ?)", (usuario, password))
+            cursor.execute(
+                "INSERT INTO usuarios (usuario, password) VALUES (?, ?)",
+                (usuario, password)
+            )
             conn.commit()
             flash('Usuario registrado con éxito')
             return redirect(url_for('login'))
@@ -64,7 +74,10 @@ def login():
 
         conn = sqlite3.connect('harmony.db')
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM usuarios WHERE usuario=? AND password=?", (usuario, password))
+        cursor.execute(
+            "SELECT * FROM usuarios WHERE usuario=? AND password=?",
+            (usuario, password)
+        )
         user = cursor.fetchone()
         conn.close()
 
@@ -94,6 +107,7 @@ def dashboard():
     ]
     return render_template('dashboard.html', mezclas=mezclas)
 
+<<<<<<< HEAD
 @app.route('/mezclador')
 def mostrar_mezclador():
     return mezclador_index(app.config['UPLOAD_FOLDER'])
@@ -122,6 +136,8 @@ def generar_mezcla():
 def mostrar_exportar():
     return exportar()
 
+=======
+>>>>>>> 1b1517204ef91296f3deb50f2afc34a4ae50dfd8
 @app.route('/logout')
 def logout():
     session.pop('usuario', None)
