@@ -164,9 +164,15 @@
         });
     }
 
-    function guardarMezcla() {
-      window.location.href = "{{ url_for('static', filename='uploads/mix_ia_final.mp3') }}?_=" + Date.now();
-    }
+   function guardarMezcla() {
+  fetch('/mezclas/guardar', { method: 'POST' })
+    .then(() => {
+      window.location.href = '/dashboard';
+    })
+    .catch(() => {
+      alert('No se pudo guardar la mezcla. Intenta de nuevo.');
+    });
+}
   </script>
 
   <div id="mensajeIA"

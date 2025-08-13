@@ -5,7 +5,6 @@ from datetime import datetime
 
 from flask import Flask, request, render_template, redirect, url_for, jsonify, flash, session
 
-# Mezclador (NO tocamos la lógica de IA)
 from controllers.mezcla_controller import (
     mezcla_bp,
     index as mezclador_index,
@@ -13,15 +12,6 @@ from controllers.mezcla_controller import (
     exportar,
     MIX_NAME as MIX_FINAL_NAME,
 )
-
-# Wallet real (tu archivo ya existe)
-from services.wallet_service import wallet_get_credits, wallet_add_credits
-# wallet_get_history puede no existir en tu módulo -> ponemos fallback
-try:
-    from services.wallet_service import wallet_get_history
-except Exception:
-    def wallet_get_history(user_id: int, limit: int = 100):
-        return []
 
 app = Flask(__name__)
 app.secret_key = "me_lapeasCalabaza"
@@ -33,12 +23,8 @@ os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 # === DB (SQLite local) ===
 DB_PATH = os.path.join(os.path.dirname(__file__), "harmony.db")
 
-# === Registrar blueprint del mezclador ===
 app.register_blueprint(mezcla_bp)
 
-# =============================================================================
-#                Mezclas guardadas (para mostrar en el dashboard)
-# =============================================================================
 def _init_mixes_table():
     con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
@@ -109,15 +95,11 @@ def get_user_mixes(user_id: int, limit: int = 8):
     con.close()
     return [{"nombre": r[0], "path": r[1], "fecha": r[2]} for r in rows]
 
-# Inicializa tabla de mixes
 try:
     _init_mixes_table()
 except Exception:
     pass
 
-# =============================================================================
-#                                   Rutas base
-# =============================================================================
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -186,7 +168,6 @@ def generar_mezcla():
 def mostrar_exportar():
     return exportar()
 
-# ======================== Guardar mezcla en el panel ==========================
 @app.post("/mezclas/guardar")
 def guardar_mezcla():
     if "usuario" not in session:
@@ -198,12 +179,11 @@ def guardar_mezcla():
         flash("No pude identificar tu usuario. Inicia sesión de nuevo.")
         return redirect(url_for("login"))
 
-    # Usamos SIEMPRE el nombre oficial definido en el controller (MIX_NAME)
     final_mix_path = os.path.join(app.config["UPLOAD_FOLDER"], MIX_FINAL_NAME)
 
     try:
         _ = save_mix_for_user(user_id, final_mix_path)
-        flash("Mezcla guardada en tu panel 👌", "success")
+        flash("Mezcla guardada en tu panel ", "success")
     except FileNotFoundError:
         flash("Aún no hay una mezcla final para guardar. Genera una primero.", "warning")
     except Exception as e:
@@ -221,53 +201,11 @@ def logout():
 def pistas():
     return "<h1 style='color:white;background:#111;padding:20px;'>🎵 Página de pistas en construcción</h1>"
 
-# ========================= Costos / Precios (usa tu wallet) ===================
 @app.route("/precios")
-def precios():
-    if "usuario" not in session:
-        session["next_url"] = request.path
-        return redirect(url_for("login"))
-    user_id = _user_id_from_session()
-    credits = wallet_get_credits(user_id) if user_id else 0
-    return render_template("precios.html", credits_badge=credits)
-
 @app.route("/precios/historial")
-def precios_historial():
-    if "usuario" not in session:
-        session["next_url"] = request.path
-        return redirect(url_for("login"))
-    user_id = _user_id_from_session()
-    events = wallet_get_history(user_id, limit=100) if user_id else []
-    credits = wallet_get_credits(user_id) if user_id else 0
-    return render_template("historial_creditos.html", events=events, credits_badge=credits)
+def _legacy_costos_removed():
+    flash("La sección de costos fue removida.", "info")
+    return redirect(url_for("dashboard"))
 
-@app.post("/comprar-demo")
-def comprar_demo():
-    if "usuario" not in session:
-        session["next_url"] = request.path
-        return redirect(url_for("login"))
-
-    user_id = _user_id_from_session()
-    if user_id:
-        try:
-            # tu wallet_add_credits acepta (user_id, amount) solamente
-            wallet_add_credits(user_id, 5)
-            flash("Se agregaron +5 créditos demo.", "success")
-        except Exception as e:
-            flash(f"No se pudieron agregar créditos: {e}", "error")
-
-    return redirect(url_for("precios"))
-
-# Badge global (para que el sidebar muestre créditos)
-@app.context_processor
-def inject_credits_badge():
-    uid = session.get("user_id")
-    try:
-        count = wallet_get_credits(uid) if uid else None
-    except Exception:
-        count = None
-    return {"credits_badge": count}
-
-# ================================== Main ======================================
 if __name__ == "__main__":
     app.run(debug=True)
