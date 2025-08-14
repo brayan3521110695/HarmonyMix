@@ -1,189 +1,135 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mezclador - HarmonyMix</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mezclador - HarmonyMind</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Tailwind CSS para el diseño -->
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center px-6 py-10">
 
-  <h1 class="text-4xl font-bold mb-6 text-pink-500">🎚️ Mezclador AI</h1>
-  <p class="text-gray-300 mb-10 text-center max-w-xl">
-    La pista ha sido cargada correctamente. Ajusta tu mezcla, aplícala con IA o prévisualiza el resultado.
-  </p>
+    <h1 class="text-4xl font-bold mb-6 text-pink-500">🎚️ Mezclador AI</h1>
+    <p class="text-gray-300 mb-10 text-center max-w-xl">
+        Selecciona las pistas de tu biblioteca que quieres mezclar. La IA hará el resto.
+    </p>
 
-  <div class="bg-gray-800 w-full max-w-4xl p-6 rounded-xl shadow-xl space-y-6">
-    <div class="flex items-center justify-between border-b border-gray-600 pb-4">
-      <div>
-        <h2 class="text-2xl font-semibold">🎵 {{ audio_file or '—' }}</h2>
-        <p class="text-gray-400 text-sm">Duración: 2:35 | Tamaño: 4.7MB</p>
-      </div>
-      <span class="bg-green-600 text-white px-3 py-1 rounded-full text-sm">Cargado</span>
-    </div>
-
-    <div class="bg-gray-700 h-32 rounded flex items-center justify-center text-gray-400 italic">
-      [ Visualizador de ondas aquí ]
-    </div>
-
-    <!-- Subida de nuevas pistas (múltiples) -->
-    <div class="space-y-3">
-      <h3 class="text-lg font-semibold">Subir nuevas pistas</h3>
-      <form id="uploadForm" class="flex flex-wrap items-center gap-3" enctype="multipart/form-data">
-        <input id="fileInput" type="file" name="files" multiple accept="audio/*"
-          class="text-sm text-white file:bg-pink-600 file:text-white file:px-4 file:py-2 file:rounded-md file:border-0 file:font-semibold hover:file:bg-pink-500" />
-        <button type="button" onclick="subirPistas()" class="bg-pink-600 hover:bg-pink-500 px-4 py-2 rounded-full">
-          ⬆️ Subir
-        </button>
-        <span id="uploadMsg" class="text-gray-400 text-sm"></span>
-      </form>
-    </div>
-
-    <!-- Lista de pistas disponibles (excluye mix_ia_final.mp3) -->
-    <div class="space-y-4">
-      <h3 class="text-lg font-semibold">Selecciona 2 o más pistas a mezclar</h3>
-      <form id="formPistas" class="bg-gray-800 p-4 rounded-lg max-h-64 overflow-auto">
-        {% if files and files|length > 0 %}
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {% for f in files %}
-          {% if f != 'mix_ia_final.mp3' %}
-          <label class="flex items-center gap-3 bg-gray-700 px-3 py-2 rounded">
-            <input type="checkbox" name="files" value="{{ f }}" class="w-4 h-4">
-            <span class="truncate">{{ f }}</span>
-          </label>
-          {% endif %}
-          {% endfor %}
+    <div class="bg-gray-800 w-full max-w-4xl p-6 rounded-xl shadow-xl space-y-6 border border-gray-700">
+        
+        <!-- Lista de pistas del usuario para seleccionar -->
+        <div class="space-y-4">
+            <h3 class="text-lg font-semibold">Selecciona 2 o más pistas de tu biblioteca</h3>
+            <div id="formPistas" class="bg-gray-900/50 p-4 rounded-lg max-h-64 overflow-auto border border-gray-700">
+                <!-- Se itera sobre la variable 'pistas_usuario' que pasa el controlador -->
+                {% if pistas_usuario and pistas_usuario|length > 0 %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {% for pista in pistas_usuario %}
+                    <label class="flex items-center gap-3 bg-gray-700 px-3 py-2 rounded hover:bg-gray-600 cursor-pointer transition-colors">
+                        <!-- El valor que se envía a la IA es el nombre del archivo guardado -->
+                        <input type="checkbox" name="files" value="{{ pista.filename }}" class="w-4 h-4 text-pink-500 bg-gray-600 border-gray-500 rounded focus:ring-pink-600 focus:ring-offset-gray-800">
+                        <!-- Mostramos el nombre amigable de la pista -->
+                        <span class="truncate" title="{{ pista.name or pista.filename }}">{{ pista.name or pista.filename }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <p class="text-gray-400">No tienes pistas en tu biblioteca.</p>
+                    <a href="{{ url_for('pistas') }}" class="text-pink-500 hover:underline mt-2 inline-block font-semibold">Sube tu primera pista aquí</a>
+                </div>
+                {% endif %}
+            </div>
         </div>
-        {% else %}
-        <p class="text-gray-400">No hay archivos en <code>static/uploads</code>. Sube algunos MP3.</p>
-        {% endif %}
-      </form>
+
+        <!-- Botones de acción -->
+        <div class="flex flex-wrap justify-center gap-4 pt-6 border-t border-gray-700">
+            <button onclick="aplicarIA()" class="bg-purple-600 hover:bg-purple-500 px-8 py-3 rounded-full font-bold text-lg shadow-lg transition-transform hover:scale-105">
+                🤖 Aplicar IA y Mezclar
+            </button>
+            <button onclick="guardarMezcla()" class="bg-green-600 hover:bg-green-500 px-5 py-2 rounded-full font-semibold transition-transform hover:scale-105">
+                💾 Guardar mezcla
+            </button>
+        </div>
     </div>
 
-    <div class="flex flex-wrap justify-center gap-4">
-      <button onclick="reproducir()" class="bg-pink-600 hover:bg-pink-500 px-5 py-2 rounded-full">▶️ Reproducir</button>
-      <button onclick="pausar()" class="bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded-full">⏸️ Pausar</button>
-      <button onclick="aplicarIA()" class="bg-purple-600 hover:bg-purple-500 px-5 py-2 rounded-full">🤖 Aplicar
-        IA</button>
-      <button onclick="guardarMezcla()" class="bg-green-600 hover:bg-green-500 px-5 py-2 rounded-full">💾 Guardar
-        mezcla</button>
-    </div>
-  </div>
-
-  {% if audio_file == 'mix_ia_final.mp3' %}
-  <div class="bg-gray-800 mt-10 p-6 rounded-xl shadow-md w-full max-w-4xl">
-    <h3 class="text-xl font-semibold text-pink-400 mb-3">🎧 Escuchar mezcla generada por IA</h3>
-    <audio controls class="w-full">
-      <source src="{{ url_for('static', filename='uploads/mix_ia_final.mp3') }}?_={{ range(1, 1000000)|random }}"
-        type="audio/mpeg">
-      Tu navegador no soporta audio HTML5.
-    </audio>
-  </div>
-  {% endif %}
-
-  <div class="mt-8">
-    <a href="{{ url_for('dashboard') }}" class="text-pink-400 hover:underline">← Volver al panel</a>
-  </div>
-
-  <audio id="player" class="hidden">
+    <!-- Reproductor para la mezcla final (solo aparece si existe) -->
     {% if audio_file %}
-    <source src="{{ url_for('static', filename='uploads/' ~ audio_file) }}" type="audio/mpeg">
+    <div class="bg-gray-800 mt-10 p-6 rounded-xl shadow-md w-full max-w-4xl border border-gray-700">
+        <h3 class="text-xl font-semibold text-pink-400 mb-3">🎧 Escuchar mezcla generada por IA</h3>
+        <audio controls class="w-full">
+            <!-- Se añade un parámetro aleatorio para evitar problemas de caché del navegador -->
+            <source src="{{ url_for('static', filename='uploads/' ~ audio_file) }}?v={{ range(1, 99999)|random }}" type="audio/mpeg">
+            Tu navegador no soporta audio HTML5.
+        </audio>
+    </div>
     {% endif %}
-    Tu navegador no soporta audio.
-  </audio>
 
-  <script>
-    function reproducir() {
-      const player = document.getElementById("player");
-      player.play();
-    }
-    function pausar() {
-      const player = document.getElementById("player");
-      player.pause();
-    }
+    <div class="mt-8">
+        <a href="{{ url_for('dashboard') }}" class="text-pink-400 hover:underline">← Volver al panel</a>
+    </div>
 
-    // Subida de múltiples pistas
-    function subirPistas() {
-      const inp = document.getElementById('fileInput');
-      const msg = document.getElementById('uploadMsg');
-      if (!inp.files || inp.files.length === 0) {
-        alert('Selecciona al menos un archivo.');
-        return;
-      }
-      const fd = new FormData();
-      for (const f of inp.files) fd.append('files', f);
-      msg.textContent = 'Subiendo...';
+    <!-- Mensaje de carga de IA (popup) -->
+    <div id="mensajeIA" class="hidden fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-purple-600 text-white px-5 py-3 rounded-lg shadow-lg z-50 font-semibold text-sm flex items-center gap-2">
+        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V8a4 4 0 0 0-4 4H4z"></path>
+        </svg>
+        Procesando mezcla con IA...
+    </div>
 
-      fetch('/mezcla/upload', { method: 'POST', body: fd })
-        .then(r => r.json())
-        .then(data => {
-          if (data.ok) {
-            msg.textContent = `Listo: ${data.guardados.length} subidos` +
-              (data.rechazados.length ? `, rechazados: ${data.rechazados.join(', ')}` : '');
-            // recargar para verlos en la lista
-            setTimeout(() => window.location.reload(), 800);
-          } else {
-            msg.textContent = data.mensaje || 'Error al subir';
-          }
-        })
-        .catch(() => { msg.textContent = 'Error al subir. Revisa tu conexión.'; });
-    }
+    <script>
+        // Enviar pistas seleccionadas al backend para mezclar
+        function aplicarIA() {
+            const seleccionados = [...document.querySelectorAll('input[name="files"]:checked')].map(i => i.value);
+            if (seleccionados.length < 2) {
+                alert('Debes seleccionar al menos dos pistas para mezclar.');
+                return;
+            }
 
-    // Enviar selección a /mezclar
-    function aplicarIA() {
-      const seleccionados = [...document.querySelectorAll('input[name="files"]:checked')].map(i => i.value);
-      if (seleccionados.length < 2) {
-        alert('Selecciona al menos dos pistas.');
-        return;
-      }
+            const mensaje = document.getElementById("mensajeIA");
+            if (mensaje) mensaje.classList.remove("hidden");
 
-      const mensaje = document.getElementById("mensajeIA");
-      if (mensaje) mensaje.classList.remove("hidden");
+            // Usamos url_for para generar la ruta correcta al endpoint del blueprint
+            fetch("{{ url_for('mezcla.mezclar') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ files: seleccionados, mode: 'smart' })
+            })
+            .then(res => {
+                if (!res.ok) {
+                    // Si el servidor responde con un error (ej. 400, 500), lo capturamos
+                    return res.json().then(err => Promise.reject(err));
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (mensaje) mensaje.classList.add("hidden");
+                alert(data.mensaje || "Mezcla generada. La página se recargará para mostrar el reproductor.");
+                // Recargamos la página para que aparezca el reproductor de la mezcla final
+                window.location.reload();
+            })
+            .catch((err) => {
+                if (mensaje) mensaje.classList.add("hidden");
+                console.error("Error en fetch:", err);
+                alert("Error al aplicar IA: " + (err.mensaje || "Revisa la consola del servidor."));
+            });
+        }
 
-      fetch('/mezclar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files: seleccionados, mode: 'smart' })   // 👈
-      })
-
-        .then(res => res.json())
-        .then(data => {
-          if (mensaje) mensaje.classList.add("hidden");
-          if (data.ok) {
-            alert(data.mensaje);
-            window.location.href = "/mezcla";
-          } else {
-            alert(data.mensaje || "Error al mezclar");
-          }
-        })
-        .catch(() => {
-          if (mensaje) mensaje.classList.add("hidden");
-          alert("Error al aplicar IA. Asegúrate de que Flask esté corriendo.");
-        });
-    }
-
-   function guardarMezcla() {
-  fetch('/mezclas/guardar', { method: 'POST' })
-    .then(() => {
-      window.location.href = '/dashboard';
-    })
-    .catch(() => {
-      alert('No se pudo guardar la mezcla. Intenta de nuevo.');
-    });
-}
-  </script>
-
-  <div id="mensajeIA"
-    class="hidden fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-purple-600 text-white px-5 py-3 rounded-lg shadow-lg z-50 font-semibold text-sm flex items-center gap-2">
-    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-      <path class="opacity-75" fill="currentColor" d="M4 12a 8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>
-    </svg>
-    Procesando mezcla con IA...
-  </div>
-
+        // Guardar la mezcla final en el perfil del usuario
+        function guardarMezcla() {
+            // Usamos url_for para la ruta de guardado que está en app.py
+            fetch("{{ url_for('guardar_mezcla') }}", { method: 'POST' })
+                .then(response => {
+                    // Redirigimos al dashboard para ver el mensaje flash de éxito o error
+                    window.location.href = "{{ url_for('dashboard') }}";
+                })
+                .catch(err => {
+                    console.error("Error en fetch:", err);
+                    alert('No se pudo comunicar con el servidor para guardar la mezcla.');
+                });
+        }
+    </script>
 </body>
-
 </html>
